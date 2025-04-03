@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Fighter Jet HUD Object Detection - Welcome Page">
+    <meta name="theme-color" content="#000000">
+    <title>Fighter Jet HUD Object Detection - Welcome</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', monospace;
+            background-color: #000;
+            color: #00ff00;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid #00ff00;
+            padding-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #00cc00;
+        }
+        
+        section {
+            margin-bottom: 30px;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            padding: 20px;
+            background-color: rgba(0, 20, 0, 0.3);
+        }
+        
+        h3 {
+            color: #00ff00;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+            padding-bottom: 10px;
+        }
+        
+        ul, ol {
+            padding-left: 25px;
+        }
+        
+        li {
+            margin-bottom: 10px;
+        }
+        
+        .button {
+            display: inline-block;
+            background-color: rgba(0, 100, 0, 0.8);
+            color: #00ff00;
+            padding: 15px 30px;
+            text-decoration: none;
+            border: 1px solid #00ff00;
+            margin: 10px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .button:hover {
+            background-color: rgba(0, 150, 0, 0.8);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+        
+        .button-container {
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .note {
+            background-color: rgba(50, 50, 0, 0.3);
+            border: 1px solid rgba(255, 255, 0, 0.3);
+            padding: 15px;
+            margin: 20px 0;
+            color: #ffff00;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.8rem;
+            color: rgba(0, 255, 0, 0.7);
+            border-top: 1px solid rgba(0, 255, 0, 0.3);
+        }
+        
+        .compatibility-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .compatibility-table th, .compatibility-table td {
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            padding: 10px;
+            text-align: left;
+        }
+        
+        .compatibility-table th {
+            background-color: rgba(0, 50, 0, 0.5);
+        }
+        
+        .compatibility-table tr:nth-child(even) {
+            background-color: rgba(0, 20, 0, 0.2);
+        }
+        
+        .check {
+            color: #00ff00;
+        }
+        
+        .warning {
+            color: #ffff00;
+        }
+        
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            h2 {
+                font-size: 1.2rem;
+            }
+            
+            .button {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>FIGHTER JET HUD</h1>
+            <h2>OBJECT DETECTION SYSTEM</h2>
+        </header>
+        
+        <section>
+            <h3>MISSION BRIEFING</h3>
+            <p>Welcome to the Fighter Jet HUD Object Detection System. This application provides a military-style heads-up display interface for real-time object detection using your device's camera.</p>
+            <p>The system can detect and track multiple objects including:</p>
+            <ul>
+                <li>Rabbit R1 devices</li>
+                <li>Water bottles</li>
+                <li>Measuring tapes</li>
+                <li>Hands</li>
+            </ul>
+        </section>
+        
+        <section>
+            <h3>CAMERA PERMISSIONS</h3>
+            <p>This application requires access to your device's camera to function properly. When you launch the application, you will be prompted to grant camera access.</p>
+            
+            <div class="note">
+                <strong>IMPORTANT:</strong> For security reasons, camera access can only be requested when you click the "LAUNCH APPLICATION" button. No images or video are stored or transmitted - all processing happens locally on your device.
+            </div>
+            
+            <h4>How to Grant Camera Permissions:</h4>
+            <ol>
+                <li>Click the "LAUNCH APPLICATION" button below</li>
+                <li>When prompted, click "Allow" to grant camera access</li>
+                <li>If you accidentally deny permission, you'll need to reset it in your browser settings</li>
+            </ol>
+        </section>
+        
+        <section>
+            <h3>SYSTEM REQUIREMENTS</h3>
+            <p>For optimal performance, please ensure your system meets these requirements:</p>
+            <ul>
+                <li><strong>Browser:</strong> Chrome, Firefox, Safari, or Edge (latest version recommended)</li>
+                <li><strong>Hardware:</strong> Device with camera and WebGL support</li>
+                <li><strong>Connection:</strong> Internet connection required for initial load (works offline afterward)</li>
+                <li><strong>Settings:</strong> JavaScript enabled, camera permissions granted</li>
+            </ul>
+            
+            <h4>Browser Compatibility:</h4>
+            <table class="compatibility-table">
+                <tr>
+                    <th>Browser</th>
+                    <th>WebRTC</th>
+                    <th>TensorFlow.js</th>
+                    <th>MediaPipe</th>
+                    <th>Notes</th>
+                </tr>
+                <tr>
+                    <td>Chrome</td>
+                    <td><span class="check">✓ Full</span></td>
+                    <td><span class="check">✓ Full</span></td>
+                    <td><span class="check">✓ Full</span></td>
+                    <td>Best performance and compatibility</td>
+                </tr>
+                <tr>
+                    <td>Firefox</td>
+                    <td><span class="check">✓ Full</span></td>
+                    <td><span class="check">✓ Full</span></td>
+                    <td><span class="check">✓ Good</span></td>
+                    <td>Good performance, minor differences in WebGL</td>
+                </tr>
+                <tr>
+                    <td>Safari</td>
+                    <td><span class="check">✓ v11+</span></td>
+                    <td><span class="check">✓ Good</span></td>
+                    <td><span class="warning">⚠️ Limited</span></td>
+                    <td>May have performance issues with complex models</td>
+                </tr>
+                <tr>
+                    <td>Edge</td>
+                    <td><span class="check">✓ Full</span></td>
+                    <td><span class="check">✓ Full</span></td>
+                    <td><span class="check">✓ Good</span></td>
+                    <td>Similar to Chrome as both use Chromium</td>
+                </tr>
+            </table>
+        </section>
+        
+        <div class="button-container">
+            <a href="index.html" class="button">LAUNCH APPLICATION</a>
+            <a href="README.md" class="button">VIEW DOCUMENTATION</a>
+        </div>
+        
+        <section>
+            <h3>TROUBLESHOOTING</h3>
+            <h4>Camera Access Issues:</h4>
+            <ul>
+                <li>Ensure your browser has permission to access the camera</li>
+                <li>Check if another application is using the camera</li>
+                <li>Try refreshing the page</li>
+                <li>On iOS, ensure camera access is enabled in Settings</li>
+            </ul>
+            
+            <h4>Performance Issues:</h4>
+            <ul>
+                <li>Enable Performance Mode for better performance on lower-end devices</li>
+                <li>Close other tabs and applications</li>
+                <li>Ensure good lighting conditions</li>
+                <li>Try a different browser (Chrome recommended)</li>
+            </ul>
+        </section>
+    </div>
+    
+    <footer>
+        Fighter Jet HUD Object Detection v1.0.0 | © 2025
+    </footer>
+</body>
+</html>

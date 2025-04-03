@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Fighter Jet HUD Object Detection - Real-time object detection with a fighter jet heads-up display interface">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Fighter Jet HUD">
+    <meta name="application-name" content="Fighter Jet HUD">
+    <meta name="msapplication-TileColor" content="#000000">
+    <title>Fighter Jet HUD Object Detection</title>
+    
+    <!-- Manifest for PWA -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', monospace;
+            background-color: #000;
+            color: #00ff00;
+            overflow: hidden;
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #video-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        #video {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        #output-canvas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+
+        .hud-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .hud-element {
+            position: absolute;
+            color: #00ff00;
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.7);
+            font-size: 14px;
+        }
+
+        .hud-border {
+            border: 1px solid rgba(0, 255, 0, 0.5);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+
+        .hud-top-left {
+            top: 20px;
+            left: 20px;
+        }
+
+        .hud-top-right {
+            top: 20px;
+            right: 20px;
+        }
+
+        .hud-bottom-left {
+            bottom: 20px;
+            left: 20px;
+        }
+
+        .hud-bottom-right {
+            bottom: 20px;
+            right: 20px;
+        }
+
+        .hud-center {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .crosshair {
+            width: 100px;
+            height: 100px;
+            border: 2px solid rgba(0, 255, 0, 0.7);
+            border-radius: 50%;
+        }
+
+        .crosshair::before, .crosshair::after {
+            content: '';
+            position: absolute;
+            background-color: rgba(0, 255, 0, 0.7);
+        }
+
+        .crosshair::before {
+            width: 2px;
+            height: 100px;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .crosshair::after {
+            width: 100px;
+            height: 2px;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .status-panel {
+            padding: 10px;
+            background-color: rgba(0, 20, 0, 0.5);
+        }
+
+        #error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #ff0000;
+            padding: 20px;
+            border: 1px solid #ff0000;
+            z-index: 10;
+            display: none;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ff00;
+            font-size: 24px;
+            z-index: 5;
+            text-align: center;
+        }
+        
+        .loading-progress {
+            width: 200px;
+            height: 10px;
+            background-color: rgba(0, 50, 0, 0.5);
+            border: 1px solid #00ff00;
+            margin-top: 10px;
+            position: relative;
+        }
+        
+        .loading-bar {
+            height: 100%;
+            background-color: #00ff00;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        /* Target box styles */
+        .target-box {
+            position: absolute;
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 8px rgba(0, 255, 0, 0.7);
+            pointer-events: none;
+        }
+        
+        .target-label {
+            position: absolute;
+            background-color: rgba(0, 20, 0, 0.7);
+            color: #00ff00;
+            padding: 2px 6px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            white-space: nowrap;
+        }
+        
+        .target-corner {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-color: #00ff00;
+            border-style: solid;
+            border-width: 0;
+        }
+        
+        .corner-tl {
+            top: 0;
+            left: 0;
+            border-top-width: 2px;
+            border-left-width: 2px;
+        }
+        
+        .corner-tr {
+            top: 0;
+            right: 0;
+            border-top-width: 2px;
+            border-right-width: 2px;
+        }
+        
+        .corner-bl {
+            bottom: 0;
+            left: 0;
+            border-bottom-width: 2px;
+            border-left-width: 2px;
+        }
+        
+        .corner-br {
+            bottom: 0;
+            right: 0;
+            border-bottom-width: 2px;
+            border-right-width: 2px;
+        }
+
+        /* NEW STYLES FOR ENHANCED HUD */
+        
+        /* Scan lines effect */
+        .scan-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 0, 0.03) 0px,
+                rgba(0, 255, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 4;
+        }
+        
+        /* Advanced targeting reticle */
+        .advanced-reticle {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border: 1px solid rgba(0, 255, 0, 0.5);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform: translate(-50%, -50%);
+        }
+        
+        .reticle-inner {
+            width: 80px;
+            height: 80px;
+            border: 1px solid rgba(0, 255, 0, 0.7);
+            border-radius: 50%;
+        }
+        
+        .reticle-center {
+            width: 4px;
+            height: 4px;
+            background-color: rgba(0, 255, 0, 0.9);
+            border-radius: 50%;
+            position: absolute;
+        }
+        
+        .reticle-line {
+            position: absolute;
+            background-color: rgba(0, 255, 0, 0.7);
+        }
+        
+        .reticle-h {
+            width: 40px;
+            height: 1px;
+        }
+        
+        .reticle-v {
+            width: 1px;
+            height: 40px;
+        }
+        
+        /* Altitude and speed indicators */
+        .altitude-indicator, .speed-indicator {
+            position: absolute;
+            width: 40px;
+            height: 200px;
+            background-color: rgba(0, 20, 0, 0.5);
+            border: 1px solid rgba(0, 255, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+        
+        .altitude-indicator {
+            right: 80px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .speed-indicator {
+            left: 80px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .indicator-bar {
+            width: 20px;
+            height: 180px;
+            background: linear-gradient(to top, #ff0000, #ffff00, #00ff00);
+            position: relative;
+        }
+        
+        .indicator-marker {
+            width: 30px;
+            height: 2px;
+            background-color: #ffffff;
+            position: absolute;
+            left: -5px;
+        }
+        
+        .indicator-value {
+            font-size: 12px;
+            color: #00ff00;
+            margin-top: 5px;
+        }
+        
+        /* Detection statistics panel */
+        .detection-stats {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            width: 180px;
+            background-color: rgba(0, 20, 0, 0.5);
+            border: 1px solid rgba(0, 255, 0, 0.5);
+            padding: 10px;
+        }
+        
+        .stats-title {
+            font-size: 14px;
+            color: #00ff00;
+            margin-bottom: 5px;
+            text-align: center;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.5);
+            padding-bottom: 5px;
+        }
+        
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+        
+        /* Color indicators for different confidence levels */
+        .confidence-high {
+            color: #00ff00; /* Green for high confidence */
+        }
+        
+        .confidence-medium {
+            color: #ffff00; /* Yellow for medium confidence */
+        }
+        
+        .confidence-low {
+            color: #ff0000; /* Red for low confidence */
+        }
+        
+        /* Horizon line */
+        .horizon-container {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            top: 50%;
+            left: 0;
+            overflow: hidden;
+        }
+        
+        .horizon-line {
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 255, 0, 0.7);
+        }
+        
+        /* Performance indicator */
+        .performance-indicator {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 20, 0, 0.5);
+            border: 1px solid rgba(0, 255, 0, 0.5);
+            padding: 5px 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .performance-label {
+            margin-right: 10px;
+        }
+        
+        .performance-bar {
+            width: 100px;
+            height: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 0, 0.5);
+        }
+        
+        .performance-level {
+            height: 100%;
+            background-color: #00ff00;
+            width: 100%;
+        }
+        
+        /* Controls panel */
+        .controls-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 20, 0, 0.7);
+            border: 1px solid rgba(0, 255, 0, 0.5);
+            padding: 10px;
+            z-index: 5;
+            pointer-events: auto;
+        }
+        
+        .control-group {
+            margin-bottom: 10px;
+        }
+        
+        .control-title {
+            color: #00ff00;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        
+        .toggle-button {
+            background-color: rgba(0, 40, 0, 0.8);
+            border: 1px solid rgba(0, 255, 0, 0.5);
+            color: #00ff00;
+            padding: 5px 10px;
+            margin-right: 5px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .toggle-button.active {
+            background-color: rgba(0, 100, 0, 0.8);
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .slider {
+            -webkit-appearance: none;
+            width: 100px;
+            height: 5px;
+            background: rgba(0, 100, 0, 0.5);
+            outline: none;
+            margin-right: 10px;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 10px;
+            height: 15px;
+            background: #00ff00;
+            cursor: pointer;
+        }
+        
+        .slider-value {
+            color: #00ff00;
+            width: 30px;
+            font-size: 12px;
+        }
+        
+        /* Target lock indicator */
+        .target-lock {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border: 2px dashed rgba(255, 255, 0, 0.7);
+            border-radius: 50%;
+            display: none;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.7; }
+        }
+        
+        /* HUD style selector */
+        .style-selector {
+            display: flex;
+        }
+        
+        .style-option {
+            margin-right: 5px;
+        }
+        
+        /* Version info */
+        .version-info {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            font-size: 10px;
+            color: rgba(0, 255, 0, 0.5);
+            z-index: 4;
+        }
+        
+        /* Help button */
+        .help-button {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 40, 0, 0.8);
+            border: 1px solid rgba(0, 255, 0, 0.5);
+            color: #00ff00;
+            padding: 5px 15px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            z-index: 5;
+            pointer-events: auto;
+        }
+        
+        /* Media queries for responsive design */
+        @media (max-width: 768px) {
+            .hud-element {
+                font-size: 12px;
+            }
+            
+            .controls-panel {
+                padding: 5px;
+            }
+            
+            .toggle-button {
+                padding: 3px 6px;
+                font-size: 10px;
+                margin-right: 2px;
+                margin-bottom: 2px;
+            }
+            
+            .crosshair {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .crosshair::before {
+                height: 80px;
+            }
+            
+            .crosshair::after {
+                width: 80px;
+            }
+            
+            .altitude-indicator, .speed-indicator {
+                height: 150px;
+                width: 30px;
+            }
+            
+            .indicator-bar {
+                height: 130px;
+                width: 15px;
+            }
+            
+            .detection-stats {
+                width: 150px;
+                top: 80px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .hud-top-left, .hud-top-right, .hud-bottom-left, .hud-bottom-right {
+                padding: 5px;
+            }
+            
+            .altitude-indicator {
+                right: 50px;
+            }
+            
+            .speed-indicator {
+                left: 50px;
+            }
+            
+            .detection-stats {
+                width: 120px;
+                font-size: 10px;
+            }
+            
+            .performance-indicator {
+                padding: 3px 5px;
+            }
+            
+            .performance-bar {
+                width: 60px;
+            }
+        }
+        
+        /* Accessibility improvements */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* Focus styles for keyboard navigation */
+        button:focus, .toggle-button:focus {
+            outline: 2px solid #00ff00;
+            outline-offset: 2px;
+        }
+        
+        /* Splash screen */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .splash-logo {
+            font-size: 32px;
+            color: #00ff00;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
+        }
+        
+        .splash-progress {
+            width: 200px;
+            height: 10px;
+            background-color: rgba(0, 50, 0, 0.5);
+            border: 1px solid #00ff00;
+            margin-top: 20px;
+        }
+        
+        .splash-bar {
+            height: 100%;
+            background-color: #00ff00;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .splash-text {
+            margin-top: 10px;
+            color: #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div class="splash-screen" id="splash-screen">
+        <div class="splash-logo">FIGHTER JET HUD</div>
+        <div>OBJECT DETECTION SYSTEM</div>
+        <div class="splash-progress">
+            <div class="splash-bar" id="splash-bar"></div>
+        </div>
+        <div class="splash-text" id="splash-text">INITIALIZING...</div>
+    </div>
+
+    <div class="container">
+        <div id="video-container">
+            <video id="video" playsinline autoplay></video>
+            <canvas id="output-canvas"></canvas>
+            
+            <div class="hud-overlay">
+                <!-- Original HUD elements -->
+                <div class="hud-element hud-top-left status-panel hud-border">
+                    <div id="status">SYSTEM: INITIALIZING</div>
+                    <div id="fps">FPS: --</div>
+                </div>
+                
+                <div class="hud-element hud-top-right status-panel hud-border">
+                    <div id="detection-status">DETECTION: STANDBY</div>
+                    <div id="objects-detected">OBJECTS: --</div>
+                </div>
+                
+                <div class="hud-element hud-center">
+                    <div class="crosshair"></div>
+                </div>
+                
+                <div class="hud-element hud-bottom-left status-panel hud-border">
+                    <div id="coordinates">X: -- Y: --</div>
+                </div>
+                
+                <div class="hud-element hud-bottom-right status-panel hud-border">
+                    <div id="model-info">MODEL: LOADING</div>
+                </div>
+                
+                <!-- NEW HUD ELEMENTS -->
+                
+                <!-- Scan lines effect -->
+                <div class="scan-lines" id="scan-lines"></div>
+                
+                <!-- Advanced targeting reticle (initially hidden, will be shown when target is detected) -->
+                <div class="target-lock" id="target-lock">
+                    <div class="reticle-inner"></div>
+                    <div class="reticle-center"></div>
+                    <div class="reticle-line reticle-h"></div>
+                    <div class="reticle-line reticle-v"></div>
+                </div>
+                
+                <!-- Altitude indicator (simulated) -->
+                <div class="altitude-indicator">
+                    <div class="indicator-bar">
+                        <div class="indicator-marker" id="altitude-marker" style="bottom: 50%"></div>
+                    </div>
+                    <div class="indicator-value" id="altitude-value">ALT: 5000</div>
+                </div>
+                
+                <!-- Speed indicator (simulated) -->
+                <div class="speed-indicator">
+                    <div class="indicator-bar">
+                        <div class="indicator-marker" id="speed-marker" style="bottom: 30%"></div>
+                    </div>
+                    <div class="indicator-value" id="speed-value">SPD: 350</div>
+                </div>
+                
+                <!-- Detection statistics panel -->
+                <div class="detection-stats">
+                    <div class="stats-title">DETECTION STATISTICS</div>
+                    <div class="stats-item">
+                        <span>Rabbit R1:</span>
+                        <span id="rabbit-count" class="confidence-medium">0</span>
+                    </div>
+                    <div class="stats-item">
+                        <span>Measuring Tape:</span>
+                        <span id="tape-count" class="confidence-high">0</span>
+                    </div>
+                    <div class="stats-item">
+                        <span>Water Bottle:</span>
+                        <span id="bottle-count" class="confidence-high">0</span>
+                    </div>
+                    <div class="stats-item">
+                        <span>Hands:</span>
+                        <span id="hand-count" class="confidence-high">0</span>
+                    </div>
+                    <div class="stats-item">
+                        <span>Avg. Confidence:</span>
+                        <span id="avg-confidence">--</span>
+                    </div>
+                </div>
+                
+                <!-- Horizon line -->
+                <div class="horizon-container">
+                    <div class="horizon-line"></div>
+                </div>
+                
+                <!-- Performance indicator -->
+                <div class="performance-indicator">
+                    <div class="performance-label">PERFORMANCE:</div>
+                    <div class="performance-bar">
+                        <div class="performance-level" id="performance-level"></div>
+                    </div>
+                </div>
+                
+                <!-- Controls panel -->
+                <div class="controls-panel">
+                    <div class="control-group">
+                        <div class="control-title">DETECTION TOGGLES:</div>
+                        <button class="toggle-button active" id="toggle-rabbit">RABBIT R1</button>
+                        <button class="toggle-button active" id="toggle-tape">TAPE</button>
+                        <button class="toggle-button active" id="toggle-bottle">BOTTLE</button>
+                        <button class="toggle-button active" id="toggle-hand">HANDS</button>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="control-title">CONFIDENCE THRESHOLD:</div>
+                        <div class="slider-container">
+                            <input type="range" min="0" max="100" value="50" class="slider" id="confidence-slider">
+                            <span class="slider-value" id="confidence-value">0.50</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="control-title">HUD STYLE:</div>
+                        <div class="style-selector">
+                            <button class="toggle-button active" id="style-green">GREEN</button>
+                            <button class="toggle-button" id="style-amber">AMBER</button>
+                            <button class="toggle-button" id="style-blue">BLUE</button>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="control-title">PERFORMANCE MODE:</div>
+                        <button class="toggle-button" id="toggle-performance">OFF</button>
+                    </div>
+                </div>
+                
+                <!-- Help button -->
+                <button class="help-button" id="help-button">HELP</button>
+                
+                <!-- Version info -->
+                <div class="version-info">
+                    Fighter Jet HUD v1.0.0 | Press H for Help
+                </div>
+            </div>
+            
+            <div id="loading" class="loading">
+                INITIALIZING SYSTEM...
+                <div class="loading-progress">
+                    <div class="loading-bar" id="loading-bar"></div>
+                </div>
+            </div>
+            <div id="error-message"></div>
+        </div>
+    </div>
+
+    <!-- TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    
+    <!-- COCO-SSD Model -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"></script>
+    
+    <!-- MediaPipe Hands -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.3/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision"></script>
+    
+    <!-- Application Script -->
+    <script src="app.js"></script>
+    
+    <!-- Splash screen script -->
+    <script>
+        // Simulate loading progress
+        document.addEventListener('DOMContentLoaded', () => {
+            const splashBar = document.getElementById('splash-bar');
+            const splashText = document.getElementById('splash-text');
+            const splashScreen = document.getElementById('splash-screen');
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5;
+                splashBar.style.width = `${progress}%`;
+                
+                if (progress < 30) {
+                    splashText.textContent = 'INITIALIZING SYSTEMS...';
+                } else if (progress < 60) {
+                    splashText.textContent = 'LOADING DETECTION MODELS...';
+                } else if (progress < 90) {
+                    splashText.textContent = 'CALIBRATING HUD...';
+                } else {
+                    splashText.textContent = 'READY FOR DEPLOYMENT';
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        splashScreen.style.opacity = '0';
+                        splashScreen.style.transition = 'opacity 0.5s ease';
+                        setTimeout(() => {
+                            splashScreen.style.display = 'none';
+                        }, 500);
+                    }, 500);
+                }
+            }, 100);
+            
+            // Connect loading bar to actual model loading progress
+            const loadingBar = document.getElementById('loading-bar');
+            
+            // Listen for custom events from app.js
+            document.addEventListener('modelLoadingProgress', (event) => {
+                loadingBar.style.width = `${event.detail.progress}%`;
+            });
+        });
+        
+        // Help button functionality
+        document.getElementById('help-button').addEventListener('click', () => {
+            // This will be handled by the showUserGuide function in app.js
+            const event = new Event('showUserGuide');
+            document.dispatchEvent(event);
+        });
+    </script>
+</body>
+</html>
